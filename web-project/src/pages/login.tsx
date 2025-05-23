@@ -1,0 +1,147 @@
+import React from 'react';
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Container,
+  CssBaseline,
+} from '@mui/material';
+import { Lock, Email } from '@mui/icons-material';
+
+const AuthPage = () => {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        backgroundColor: '#f5f5f5',
+      }}
+    >
+      <CssBaseline />
+
+      {/* Градиентная часть (1/3 экрана) */}
+      <Box
+        sx={{
+          width: '33%',
+          background: 'linear-gradient(135deg, #FFD3B6, #997F6D)',
+          display: { xs: 'none', md: 'flex' },
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          p: 4,
+        }}
+      ></Box>
+
+      {/* Основная часть (2/3 экрана) */}
+      <Container
+        sx={{
+          width: '67%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          bgcolor: 'background.paper',
+          p: 4,
+          boxShadow: { xs: 'none', md: 1 },
+        }}
+      >
+        {/* Заголовок сайта */}
+        <Typography
+          variant='h1'
+          align='center'
+          gutterBottom
+          sx={{
+            mb: 6,
+            fontWeight: 'bold',
+            color: '#997F6D',
+            fontSize: '4rem',
+          }}
+        >
+          DigiLog
+        </Typography>
+
+        {/* Форма регистрации */}
+        <Box
+          component='form'
+          sx={{
+            mt: 1,
+            width: '50%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            mx: 'auto',
+          }}
+        >
+          <TextField
+            margin='normal'
+            required
+            fullWidth
+            id='email'
+            label='Email'
+            name='email'
+            autoComplete='email'
+            autoFocus
+            InputProps={{
+              startAdornment: <Email sx={{ mr: 1, color: '#997F6D' }} />,
+            }}
+          />
+          <TextField
+            margin='normal'
+            required
+            fullWidth
+            name='password'
+            label='Пароль'
+            type='password'
+            id='password'
+            autoComplete='current-password'
+            InputProps={{
+              startAdornment: <Lock sx={{ mr: 1, color: '#997F6D' }} />,
+            }}
+          />
+          <Button
+            type='submit'
+            fullWidth
+            variant='contained'
+            sx={{
+              mt: 3,
+              mb: 2,
+              py: 1.5,
+              bgcolor: '#997F6D',
+              '&:hover': {
+                bgcolor: '#7a6554',
+                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)',
+              },
+              transition: 'all 0.3s ease',
+            }}
+          >
+            Зарегистрироваться
+          </Button>
+
+          <Button
+            fullWidth
+            variant='outlined'
+            sx={{
+              mt: 1,
+              mb: 2,
+              py: 1.5,
+              color: '#997F6D',
+              borderColor: '#997F6D',
+              '&:hover': {
+                borderColor: '#7a6554',
+                color: '#7a6554',
+                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                backgroundColor: 'rgba(153, 127, 109, 0.04)',
+              },
+              transition: 'all 0.3s ease',
+            }}
+            href='/login'
+          >
+            Уже есть аккаунт? Войти
+          </Button>
+        </Box>
+      </Container>
+    </Box>
+  );
+};
+
+export default AuthPage;

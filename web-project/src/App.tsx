@@ -1,25 +1,29 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import { ThemeProvider } from '@mui/material';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { theme } from './theme';
+import MainPage from './pages/main';
+import ProfilePage from './pages/profile';
+import UserProfile from './pages/userProfile';
+import AuthPage from './pages/login';
+import FriendsPage from './pages/friends';
+import MessagePage from './pages/messages';
 
 function App() {
   return (
-    <div className='App'>
-      <header className='App-header'>
-        <img src={logo} className='App-logo' alt='logo' />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className='App-link'
-          href='https://reactjs.org'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <Router>
+        <Routes>
+          <Route path='/' element={<MainPage />} />
+          <Route path='/profile' element={<ProfilePage />} />
+          <Route path='/profile/:userId' element={<UserProfile />} />
+          <Route path='/auth' element={<AuthPage />} />
+          <Route path='/friends' element={<FriendsPage />} />
+          <Route path='/messages' element={<MessagePage />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 
