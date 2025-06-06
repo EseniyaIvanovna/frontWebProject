@@ -9,37 +9,56 @@ import {
   CssBaseline,
   CircularProgress,
 } from '@mui/material';
-import { Lock, Email } from '@mui/icons-material';
+import { Email, Person, Lock, CalendarToday } from '@mui/icons-material';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { LoginRequest } from '../api/authApiSlice';
 import { useNavigate } from 'react-router-dom';
-import { useLoginMutation } from '../api/authApiSlice';
+import { useRegisterMutation } from '../api/authApiSlice';
 
 const validationSchema = Yup.object({
+  name: Yup.string().min(2, 'Минимум 2 символа').required('Обязательное поле'),
+  lastName: Yup.string()
+    .min(2, 'Минимум 2 символа')
+    .required('Обязательное поле'),
+  dateOfBirth: Yup.date()
+    .required('Обязательное поле')
+    .max(new Date(), 'Дата рождения не может быть в будущем'),
   email: Yup.string().email('Некорректный email').required('Обязательное поле'),
   password: Yup.string()
-    .min(6, 'Пароль должен содержать минимум 6 символов')
+    .min(6, 'Минимум 6 символов')
     .required('Обязательное поле'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password')], 'Пароли должны совпадать')
+    .required('Подтвердите пароль'),
 });
 
-const AuthPage = () => {
+const RegisterPage = () => {
   const navigate = useNavigate();
-  const [login, { isLoading }] = useLoginMutation();
+  const [register, { isLoading }] = useRegisterMutation();
 
-  const formik = useFormik<LoginRequest>({
+  const formik = useFormik({
     initialValues: {
+      name: '',
+      lastName: '',
+      dateOfBirth: null as Date | null,
       email: '',
       password: '',
+      confirmPassword: '',
     },
     validationSchema,
     onSubmit: async (values, { setSubmitting, setFieldError }) => {
       try {
-        await login(values).unwrap();
-        navigate('/');
+        await register({
+          Name: values.name,
+          LastName: values.lastName,
+          DateOfBirth: values.dateOfBirth,
+          Email: values.email,
+          Password: values.password,
+        }).unwrap();
+        navigate('/login');
       } catch (error) {
-        setFieldError('password', 'Неверный email или пароль');
-        setFieldError('email', 'Неверный email или пароль');
+        setFieldError('email', 'Ошибка регистрации');
+        setFieldError('password', 'Ошибка регистрации');
       } finally {
         setSubmitting(false);
       }
@@ -113,11 +132,69 @@ const AuthPage = () => {
             margin='normal'
             required
             fullWidth
+            id='name'
+            label='Имя'
+            name='name'
+            autoComplete='given-name'
+            value={formik.values.name}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.name && Boolean(formik.errors.name)}
+            helperText={formik.touched.name && formik.errors.name}
+            InputProps={{
+              startAdornment: <Person sx={{ mr: 1, color: '#997F6D' }} />,
+            }}
+          />
+
+          <TextField
+            margin='normal'
+            required
+            fullWidth
+            id='lastName'
+            label='Фамилия'
+            name='lastName'
+            autoComplete='family-name'
+            value={formik.values.lastName}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={formik.touched.lastName && Boolean(formik.errors.lastName)}
+            helperText={formik.touched.lastName && formik.errors.lastName}
+            InputProps={{
+              startAdornment: <Person sx={{ mr: 1, color: '#997F6D' }} />,
+            }}
+          />
+
+          <TextField
+            margin='normal'
+            required
+            fullWidth
+            id='dateOfBirth'
+            label='Дата рождения'
+            name='dateOfBirth'
+            type='date'
+            InputLabelProps={{ shrink: true }}
+            value={formik.values.dateOfBirth}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={
+              formik.touched.dateOfBirth && Boolean(formik.errors.dateOfBirth)
+            }
+            helperText={formik.touched.dateOfBirth && formik.errors.dateOfBirth}
+            InputProps={{
+              startAdornment: (
+                <CalendarToday sx={{ mr: 1, color: '#997F6D' }} />
+              ),
+            }}
+          />
+
+          <TextField
+            margin='normal'
+            required
+            fullWidth
             id='email'
             label='Email'
             name='email'
             autoComplete='email'
-            autoFocus
             value={formik.values.email}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
@@ -127,6 +204,7 @@ const AuthPage = () => {
               startAdornment: <Email sx={{ mr: 1, color: '#997F6D' }} />,
             }}
           />
+
           <TextField
             margin='normal'
             required
@@ -135,7 +213,7 @@ const AuthPage = () => {
             label='Пароль'
             type='password'
             id='password'
-            autoComplete='current-password'
+            autoComplete='new-password'
             value={formik.values.password}
             onChange={formik.handleChange}
             onBlur={formik.handleBlur}
@@ -145,10 +223,36 @@ const AuthPage = () => {
               startAdornment: <Lock sx={{ mr: 1, color: '#997F6D' }} />,
             }}
           />
+
+          <TextField
+            margin='normal'
+            required
+            fullWidth
+            name='confirmPassword'
+            label='Подтвердите пароль'
+            type='password'
+            id='confirmPassword'
+            autoComplete='new-password'
+            value={formik.values.confirmPassword}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            error={
+              formik.touched.confirmPassword &&
+              Boolean(formik.errors.confirmPassword)
+            }
+            helperText={
+              formik.touched.confirmPassword && formik.errors.confirmPassword
+            }
+            InputProps={{
+              startAdornment: <Lock sx={{ mr: 1, color: '#997F6D' }} />,
+            }}
+          />
+
           <Button
             type='submit'
             fullWidth
             variant='contained'
+            disabled={formik.isSubmitting || isLoading}
             sx={{
               mt: 3,
               mb: 2,
@@ -164,7 +268,7 @@ const AuthPage = () => {
             {isLoading ? (
               <CircularProgress size={24} color='inherit' />
             ) : (
-              'Войти'
+              'Зарегистрироваться'
             )}
           </Button>
 
@@ -185,9 +289,9 @@ const AuthPage = () => {
               },
               transition: 'all 0.3s ease',
             }}
-            href='/register'
+            href='/login'
           >
-            Нет аккаунта? Зарегистрироваться
+            Уже есть аккаунт? Войти
           </Button>
         </Box>
       </Container>
@@ -195,4 +299,4 @@ const AuthPage = () => {
   );
 };
 
-export default AuthPage;
+export default RegisterPage;
