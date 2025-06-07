@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { apiSlice } from './apiSlice';
 import { Post } from './models/post';
 
 export type GetPostsByUserRequest = {
   id: number;
 };
+export type GetPostsRequest = {};
 
 export const postApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -11,6 +13,14 @@ export const postApiSlice = apiSlice.injectEndpoints({
     getPostsByUser: builder.query<Post[], GetPostsByUserRequest>({
       query: ({ id }) => ({
         url: `/Post/byUser/${id}`,
+        method: 'GET',
+      }),
+      providesTags: ['Post'],
+    }),
+
+    getAllPosts: builder.query<Post[], GetPostsRequest>({
+      query: () => ({
+        url: `/Post`,
         method: 'GET',
       }),
       providesTags: ['Post'],
@@ -37,6 +47,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
 
 export const {
   useGetPostsByUserQuery,
+  useGetAllPostsQuery,
   useCreatePostMutation,
   useDeletePostMutation,
 } = postApiSlice;

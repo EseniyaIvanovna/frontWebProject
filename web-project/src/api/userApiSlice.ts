@@ -2,6 +2,9 @@
 import { apiSlice } from './apiSlice';
 
 export type UserInfoRequest = {};
+export type GetUserByIdRequest = {
+  id: number;
+};
 
 export type UserInfoResponse = {
   id: number;
@@ -28,6 +31,15 @@ export const userApiSlice = apiSlice.injectEndpoints({
       query: () => ({
         url: '/User/userInfo',
         method: 'GET',
+        credentials: 'include',
+      }),
+      providesTags: ['User'],
+    }),
+
+    getUserById: builder.query<UserInfoResponse, GetUserByIdRequest>({
+      query: ({ id }) => ({
+        url: `/User/${id}`,
+        method: 'GET',
       }),
       providesTags: ['User'],
     }),
@@ -43,4 +55,5 @@ export const userApiSlice = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useUserInfoQuery, useUpdateUserMutation } = userApiSlice;
+export const { useUserInfoQuery, useGetUserByIdQuery, useUpdateUserMutation } =
+  userApiSlice;

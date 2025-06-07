@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-empty-pattern */
 import { fetchBaseQuery, createApi } from '@reduxjs/toolkit/query/react';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: process.env.REACT_APP_API_URL ?? 'https://localhost:7187',
+  credentials: 'include',
   prepareHeaders(headers) {
     const token = localStorage.getItem('auth_token');
 
@@ -13,10 +15,9 @@ const baseQuery = fetchBaseQuery({
 });
 
 export const apiSlice = createApi({
-  reducerPath: 'api',
   baseQuery,
-  tagTypes: ['User', 'Post', 'Attachment'],
-  endpoints: () => ({}),
+  tagTypes: ['User', 'Post', 'Attachment', 'Reaction', 'Comment'],
+  endpoints: (build) => ({}),
 });
 
 export const {} = apiSlice;

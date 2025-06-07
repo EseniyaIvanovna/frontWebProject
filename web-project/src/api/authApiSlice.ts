@@ -29,12 +29,10 @@ export const authApiSlice = apiSlice.injectEndpoints({
         method: 'POST',
         body: args,
       }),
-      async onQueryStarted(_args, { queryFulfilled }) {
+      async onQueryStarted(args, { queryFulfilled }) {
         try {
-          const { data } = await queryFulfilled;
-          if (data.token) {
-            localStorage.setItem('auth_token', data.token);
-          }
+          await queryFulfilled; // Просто ждем успешный ответ
+          // Токен уже в куке, ничего делать не нужно
         } catch (error) {
           console.error(error);
         }

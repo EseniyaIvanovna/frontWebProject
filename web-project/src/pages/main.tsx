@@ -1,72 +1,60 @@
-import React, { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Box, Button, Paper } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Paper } from '@mui/material';
 import { AccountCircle, Mail, People } from '@mui/icons-material';
 import { Post } from '../components/post';
 import Header from '../components/header';
+import { useGetAllPostsQuery } from '../api/postApiSlice';
+import {
+  useAddReactionMutation,
+  useRemoveReactionMutation,
+  useGetReactionsByPostQuery,
+} from '../api/reactionApiSlice';
+import { PostWithData } from '../components/postWithData';
+import { useUserInfoQuery } from '../api/userApiSlice';
 
 export default function MainPage() {
-  const currentUser = {
-    id: 1,
-    name: 'Текущий',
-    lastName: 'Пользователь',
-  };
+  // const { data: userInfo, isLoading: isUserLoading } = useUserInfoQuery({});
+  const {
+    data: posts = [],
+    isLoading: isPostsLoading,
+    isError: isPostsError,
+  } = useGetAllPostsQuery({});
 
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      author: {
-        id: 1,
-        name: 'Иван',
-        lastName: 'Иванов',
-      },
-      content:
-        'Сегодня замечательный день! Солнце светит, птицы поют. Решил прогуляться в парке и насладиться природой.',
-      createdAt: '2 часа назад',
-      likes: 15,
-      isLiked: false,
-      comments: [
-        {
-          id: 1,
-          author: {
-            id: 2,
-            name: 'Мария',
-            lastName: 'Петрова',
-          },
-          content: 'Согласна! Я тоже сегодня гуляла в парке, очень красиво!',
-          createdAt: '1 час назад',
-        },
-      ],
-    },
-    {
-      id: 2,
-      author: {
-        id: 3,
-        name: 'Алексей',
-        lastName: 'Сидоров',
-      },
-      content:
-        'Кто-нибудь знает хорошие курсы по React? Хочу улучшить свои навыки в разработке интерфейсов.',
-      createdAt: '5 часов назад',
-      likes: 7,
-      isLiked: true,
-      comments: [],
-    },
-  ]);
+  // if (isUserLoading || isPostsLoading) {
+  //   return (
+  //     <Box display='flex' justifyContent='center' mt={4}>
+  //       <CircularProgress />
+  //     </Box>
+  //   );
+  // }
 
-  const handleLike = (postId: number) => {
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-            isLiked: !post.isLiked,
-          };
-        }
-        return post;
-      })
+  if (isPostsError) {
+    return (
+      <Box p={3}>
+        <Alert severity='error'>Не удалось загрузить посты</Alert>
+      </Box>
     );
+  }
+
+  // if (!userInfo) {
+  //   return (
+  //     <Box p={3}>
+  //       <Alert severity='error'>Не удалось загрузить данные пользователя</Alert>
+  //     </Box>
+  //   );
+  // }
+
+  // const currentUser = {
+  //   id: userInfo.id,
+  //   name: userInfo.name,
+  //   lastName: userInfo.lastName,
+  // }
+  const currentUser = {
+    id: 17,
+    name: 'Есения',
+    lastName: 'Мижутина',
   };
 
   return (
@@ -163,20 +151,14 @@ export default function MainPage() {
             overflowY: 'auto',
             display: 'flex',
             justifyContent: 'center',
-            backgroundColor: '#FFD3B6',
           }}
         >
-          <Box
-            sx={{
-              width: '100%',
-            }}
-          >
+          <Box sx={{ width: '100%', maxWidth: 800 }}>
             {posts.map((post) => (
-              <Post
+              <PostWithData
                 key={post.id}
                 post={post}
                 currentUser={currentUser}
-                onLike={handleLike}
               />
             ))}
           </Box>
