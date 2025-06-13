@@ -20,17 +20,18 @@ function App() {
       <ThemeProvider theme={theme}>
         <Router>
           <Routes>
-            <Route path='/' element={<MainPage />} />
+            {/* <Route path='/' element={<MainPage />} /> */}
             {/* <Route path='/profile' element={<ProfilePage />} /> */}
             <Route path='/profile/:userId' element={<UserProfile />} />
             <Route path='/login' element={<AuthPage />} />
-            <Route path='/friends' element={<FriendsPage />} />
-            <Route path='/messages' element={<MessagePage />} />
+
             <Route path='/register' element={<RegisterPage />} />
 
             <Route element={<AuthProtected />}>
               <Route path='/' element={<MainPage />} />
               <Route path='/profile' element={<ProfilePage />} />
+              <Route path='/friends' element={<FriendsPage />} />
+              <Route path='/messages' element={<MessagePage />} />
             </Route>
           </Routes>
         </Router>

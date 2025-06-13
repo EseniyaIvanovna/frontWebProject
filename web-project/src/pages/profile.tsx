@@ -19,9 +19,15 @@ import ProfilePost from '../components/ProfilePost';
 import {
   useCreatePostMutation,
   useDeletePostMutation,
+  useUpdatePostMutation,
   useGetPostsByUserQuery,
 } from '../api/postApiSlice';
 import { useUpdateUserMutation, useUserInfoQuery } from '../api/userApiSlice';
+import {
+  useLazyGetAttachmentLinkQuery,
+  useUploadAttachmentMutation,
+} from '../api/attachmentsApiSlice';
+import { UserAvatar } from '../components/avatar';
 
 const ProfilePage = () => {
   const {
@@ -39,32 +45,38 @@ const ProfilePage = () => {
   } = useGetPostsByUserQuery({ id: userData?.id || 0 }, { skip: !userData });
 
   const [updateUser] = useUpdateUserMutation();
-
+  const [updatePost] = useUpdatePostMutation();
   const [createPost] = useCreatePostMutation();
   const [deletePost] = useDeletePostMutation();
 
   const [editData, setEditData] = useState({
+    id: 0,
     name: '',
     lastName: '',
     dateOfBirth: new Date(),
     email: '',
+    password: '',
     info: '',
     photo: null as File | null,
-    photoUrl: '',
+    photoUrl: '' as string,
   });
 
   const [newPostText, setNewPostText] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [uploadAttachment] = useUploadAttachmentMutation();
+  const [getAttachmentLink] = useLazyGetAttachmentLinkQuery();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Заполняем данные пользователя при загрузке
   useEffect(() => {
     if (userData) {
       setEditData({
+        id: userData.id,
         name: userData.name,
         lastName: userData.lastName,
         dateOfBirth: new Date(userData.dateOfBirth),
         email: userData.email,
+        password: userData.password,
         info: userData.info || 'Пользователь пока ничего не рассказал о себе',
         photo: null,
         photoUrl: userData.photoAttachmentUrl || '',
@@ -72,7 +84,6 @@ const ProfilePage = () => {
     }
   }, [userData]);
 
-  // Обработчики событий
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
@@ -95,16 +106,35 @@ const ProfilePage = () => {
 
   const handleSaveChanges = async () => {
     try {
+      let photoAttachmentId: number | null = null;
+      let photoUrl = editData.photoUrl;
+
+      if (editData.photo) {
+        const uploadedPhoto = await uploadAttachment({
+          file: editData.photo,
+          category: 'profile-photos',
+        }).unwrap();
+
+        const linkResponse = await getAttachmentLink(uploadedPhoto.id).unwrap();
+
+        photoAttachmentId = uploadedPhoto.id;
+        photoUrl = linkResponse.url;
+      }
+
       await updateUser({
+        id: editData.id,
+        email: editData.email,
+        password: editData.password,
         name: editData.name,
         lastName: editData.lastName,
         dateOfBirth: editData.dateOfBirth.toISOString(),
         info: editData.info,
-        photoAttachmentUrl: editData.photoUrl,
+        photoAttachmentId: photoAttachmentId,
+        photoAttachmentUrl: photoUrl,
       }).unwrap();
 
       setIsEditModalOpen(false);
-      refetchUser();
+      await refetchUser();
     } catch (error) {
       console.error('Ошибка при обновлении профиля:', error);
     }
@@ -133,9 +163,13 @@ const ProfilePage = () => {
     }
   };
 
-  const handleLike = (postId: number) => {
-    // Реализуйте логику лайков, если есть соответствующий API
-    console.log('Like post:', postId);
+  const handleEditPost = async (postId: number, newContent: string) => {
+    try {
+      await updatePost({ id: postId, text: newContent }).unwrap();
+      refetchPosts();
+    } catch (error) {
+      console.error('Ошибка при обновлении поста:', error);
+    }
   };
 
   if (isUserLoading) {
@@ -185,18 +219,12 @@ const ProfilePage = () => {
             gap: 2,
           }}
         >
-          <Avatar
-            sx={{
-              width: 150,
-              height: 150,
-              fontSize: '3rem',
-              bgcolor: '#997F6D',
-            }}
-            src={editData.photoUrl}
-          >
-            {!editData.photoUrl &&
-              `${editData.name.charAt(0)}${editData.lastName.charAt(0)}`}
-          </Avatar>
+          <UserAvatar
+            photoAttachmentId={userData?.photoAttachmentId}
+            name={editData.name}
+            lastName={editData.lastName}
+            size={150}
+          />
 
           <Button
             href='/'
@@ -302,15 +330,13 @@ const ProfilePage = () => {
               key={post.id}
               post={{
                 id: post.id,
-                content: post.text,
+                text: post.text,
                 createdAt: new Date(post.createdAt).toLocaleString('ru-RU'),
-                likes: 0,
-                isLiked: false,
-                comments: 0,
               }}
               onLike={() => console.log('Like')}
-              onEdit={() => console.log('Edit')}
-              onDelete={() => console.log('Delete')}
+              onEdit={handleEditPost}
+              onDelete={handleDeletePost}
+              refetchPosts={refetchPosts}
             />
           ))
         ) : (
@@ -321,7 +347,6 @@ const ProfilePage = () => {
       </Box>
 
       {/* Модальное окно редактирования */}
-      {/* Модальное окно редактирования профиля */}
       <Modal open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)}>
         <Box
           sx={{
@@ -397,6 +422,14 @@ const ProfilePage = () => {
                   dateOfBirth: new Date(e.target.value),
                 }))
               }
+            />
+
+            <TextField
+              fullWidth
+              label='Пароль'
+              name='password'
+              value={editData.password}
+              onChange={handleInputChange}
             />
 
             <TextField

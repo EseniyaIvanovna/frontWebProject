@@ -58,5 +58,6 @@ export const {
   useUploadAttachmentMutation,
   useGetAttachmentMetadataQuery,
   useGetAttachmentLinkQuery,
+  useLazyGetAttachmentLinkQuery,
   useDeleteAttachmentMutation,
 } = attachmentsApiSlice;

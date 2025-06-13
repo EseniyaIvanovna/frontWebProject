@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -8,129 +9,134 @@ import {
   Typography,
   Divider,
   Stack,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
-import { Home, PersonAdd, Send } from '@mui/icons-material';
+import { Home, PersonAdd, PersonRemove, Send } from '@mui/icons-material';
 import Header from '../components/header';
-import { Post } from '../components/post';
-
-interface User {
-  id: number;
-  name: string;
-  lastName: string;
-  dateOfBirth: Date;
-  info?: string;
-  email?: string;
-  isFriend?: boolean;
-}
-
-interface PostType {
-  id: number;
-  author: {
-    id: number;
-    name: string;
-    lastName: string;
-  };
-  content: string;
-  createdAt: string;
-  likes: number;
-  isLiked: boolean;
-  comments: Array<{
-    id: number;
-    author: {
-      id: number;
-      name: string;
-      lastName: string;
-    };
-    content: string;
-    createdAt: string;
-  }>;
-}
+import { PostWithData } from '../components/postWithData';
+import { useGetUserByIdQuery, useUserInfoQuery } from '../api/userApiSlice';
+import { useGetPostsByUserQuery } from '../api/postApiSlice';
+import {
+  useAddInteractionMutation,
+  useGetInteractionByUserIdQuery,
+  useRemoveInteractionMutation,
+} from '../api/interactionApiSlice';
 
 const UserProfilePage = () => {
-  // Данные текущего пользователя (кто смотрит профиль)
-  const [currentUser] = useState<User>({
-    id: 2,
-    name: 'Мария',
-    lastName: 'Петрова',
-    dateOfBirth: new Date(1999, 1, 5),
-  });
+  const { userId } = useParams<{ userId: string }>();
+  const navigate = useNavigate();
+  const numericUserId = Number(userId);
 
-  // Данные пользователя, чей профиль просматриваем
-  const [profileUser] = useState<User>({
-    id: 1,
-    name: 'Иван',
-    lastName: 'Иванов',
-    dateOfBirth: new Date(1990, 5, 15),
-    info: 'Люблю путешествовать и программировать',
-    email: 'ivan.ivanov@example.com',
-    isFriend: false,
-  });
+  const { data: userInfo, isLoading: isCurrentUserLoading } = useUserInfoQuery(
+    {}
+  );
+  const currentUserId = userInfo?.id;
+  const {
+    data: profileUser,
+    isLoading: isUserLoading,
+    isError: isUserError,
+    refetch: refetchUser,
+  } = useGetUserByIdQuery({ id: numericUserId });
 
-  // Посты пользователя
-  const [posts, setPosts] = useState<PostType[]>([
-    {
-      id: 1,
-      author: {
-        id: 1,
-        name: 'Иван',
-        lastName: 'Иванов',
-      },
-      content: 'Сегодня замечательный день! Солнце светит, птицы поют.',
-      createdAt: '2 часа назад',
-      likes: 15,
-      isLiked: false,
-      comments: [
-        {
-          id: 1,
-          author: {
-            id: 2,
-            name: 'Мария',
-            lastName: 'Петрова',
-          },
-          content: 'Согласна! Я тоже сегодня гуляла в парке, очень красиво!',
-          createdAt: '1 час назад',
-        },
-      ],
-    },
-    {
-      id: 2,
-      author: {
-        id: 1,
-        name: 'Иван',
-        lastName: 'Иванов',
-      },
-      content: 'Кто-нибудь знает хорошие курсы по React?',
-      createdAt: '5 часов назад',
-      likes: 7,
-      isLiked: true,
-      comments: [],
-    },
-  ]);
+  const {
+    data: posts = [],
+    isLoading: isPostsLoading,
+    isError: isPostsError,
+  } = useGetPostsByUserQuery({ id: numericUserId });
 
-  const handleLike = (postId: number): void => {
-    setPosts(
-      posts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              likes: post.isLiked ? post.likes - 1 : post.likes + 1,
-              isLiked: !post.isLiked,
-            }
-          : post
-      )
+  const {
+    data: interactions = [],
+    isLoading: isInteractionsLoading,
+    refetch: refetchInteractions,
+  } = useGetInteractionByUserIdQuery(
+    { id: currentUserId || 0 },
+    { skip: !currentUserId }
+  );
+
+  const [addInteraction] = useAddInteractionMutation();
+  const [removeInteraction] = useRemoveInteractionMutation();
+
+  const [isFriend, setIsFriend] = useState(false);
+  const [interactionId, setInteractionId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (interactions && currentUserId && profileUser) {
+      const interaction = interactions.find(
+        (interaction) =>
+          (interaction.user1Id === currentUserId &&
+            interaction.user2Id === profileUser.id) ||
+          (interaction.user1Id === profileUser.id &&
+            interaction.user2Id === currentUserId)
+      );
+
+      setIsFriend(!!interaction);
+      setInteractionId(interaction?.id || null);
+    }
+  }, [interactions, currentUserId, profileUser]);
+
+  const handleAddFriend = async () => {
+    if (!currentUserId || !profileUser) return;
+
+    try {
+      await addInteraction({
+        user1Id: currentUserId,
+        user2Id: profileUser.id,
+        status: 1,
+      }).unwrap();
+      refetchInteractions();
+    } catch (error) {
+      console.error('Failed to add friend:', error);
+    }
+  };
+
+  const handleRemoveFriend = async () => {
+    if (!interactionId) return;
+
+    try {
+      await removeInteraction(interactionId).unwrap();
+      refetchInteractions();
+    } catch (error) {
+      console.error('Failed to remove friend:', error);
+    }
+  };
+
+  const handleSendMessage = () => {
+    navigate(`/messages/${numericUserId}`);
+  };
+
+  if (isCurrentUserLoading || isUserLoading || isInteractionsLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <CircularProgress />
+      </Box>
     );
-  };
+  }
 
-  const handleAddFriend = (): void => {
-    console.log('Добавлен в друзья');
-  };
+  if (!userInfo) {
+    return (
+      <Box p={3}>
+        <Alert severity='error'>Не удалось загрузить данные пользователя</Alert>
+      </Box>
+    );
+  }
 
-  const handleSendMessage = (): void => {
-    console.log('Отправлено сообщение');
-  };
+  if (isUserError || !profileUser) {
+    return (
+      <Box sx={{ textAlign: 'center', mt: 4 }}>
+        <Alert severity='error'>Пользователь не найден</Alert>
+        <Button component={Link} to='/' sx={{ mt: 2 }}>
+          На главную
+        </Button>
+      </Box>
+    );
+  }
 
-  const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('ru-RU');
+  const currentUser = {
+    id: userInfo.id,
+    name: userInfo.name,
+    lastName: userInfo.lastName,
+    photoAttachmentUrl: userInfo.photoAttachmentUrl,
   };
 
   return (
@@ -176,41 +182,37 @@ const UserProfilePage = () => {
           </Avatar>
 
           <Stack spacing={2} sx={{ width: '100%', maxWidth: 300 }}>
-            <Button
-              variant={profileUser.isFriend ? 'outlined' : 'contained'}
-              startIcon={<PersonAdd />}
-              onClick={handleAddFriend}
-              sx={{
-                bgcolor: profileUser.isFriend ? 'inherit' : '#997F6D',
-                color: profileUser.isFriend ? '#997F6D' : 'white',
-                borderColor: '#997F6D',
-                '&:hover': {
-                  bgcolor: profileUser.isFriend
-                    ? 'rgba(153, 127, 109, 0.1)'
-                    : '#7a6554',
-                },
-              }}
-            >
-              {profileUser.isFriend ? 'У вас в друзьях' : 'Добавить в друзья'}
-            </Button>
-
-            <Button
-              component={Link}
-              to='/messages'
-              variant='outlined'
-              startIcon={<Send />}
-              onClick={handleSendMessage}
-              sx={{
-                color: '#997F6D',
-                borderColor: '#997F6D',
-                '&:hover': {
-                  backgroundColor: 'rgba(153, 127, 109, 0.1)',
-                  borderColor: '#7a6554',
-                },
-              }}
-            >
-              Отправить сообщение
-            </Button>
+            {isFriend ? (
+              <Button
+                variant='outlined'
+                startIcon={<PersonRemove />}
+                onClick={handleRemoveFriend}
+                sx={{
+                  color: '#997F6D',
+                  borderColor: '#997F6D',
+                  '&:hover': {
+                    bgcolor: 'rgba(153, 127, 109, 0.1)',
+                  },
+                }}
+              >
+                Удалить из друзей
+              </Button>
+            ) : (
+              <Button
+                variant='contained'
+                startIcon={<PersonAdd />}
+                onClick={handleAddFriend}
+                sx={{
+                  bgcolor: '#997F6D',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: '#7a6554',
+                  },
+                }}
+              >
+                Добавить в друзья
+              </Button>
+            )}
 
             <Button
               href='/'
@@ -249,7 +251,7 @@ const UserProfilePage = () => {
           </Typography>
           <Typography>
             <strong>Дата рождения:</strong>{' '}
-            {formatDate(profileUser.dateOfBirth)}
+            {new Date(profileUser.dateOfBirth).toLocaleDateString('ru-RU')}
           </Typography>
 
           <Divider sx={{ my: 2 }} />
@@ -266,19 +268,17 @@ const UserProfilePage = () => {
       <Box
         sx={{
           flexGrow: 1,
-          px: 4,
-          pb: 4,
+          p: 3,
           overflowY: 'auto',
+          display: 'flex',
+          justifyContent: 'center',
         }}
       >
-        {posts.map((post) => (
-          <Post
-            key={post.id}
-            post={post}
-            currentUser={currentUser}
-            onLike={handleLike}
-          />
-        ))}
+        <Box sx={{ width: '100%', maxWidth: 800 }}>
+          {posts.map((post) => (
+            <PostWithData key={post.id} post={post} currentUser={currentUser} />
+          ))}
+        </Box>
       </Box>
     </Box>
   );

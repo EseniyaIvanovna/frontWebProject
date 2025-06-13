@@ -7,6 +7,7 @@ export type GetCommentsByPostRequest = {
 
 export type AddCommentRequest = {
   postId: number;
+  userId: number;
   content: string;
 };
 
@@ -17,9 +18,7 @@ export const commentApiSlice = apiSlice.injectEndpoints({
         url: `/Comment/ByPost/${postId}`,
         method: 'GET',
       }),
-      providesTags: (result, error, arg) => [
-        { type: 'Comment', id: arg.postId },
-      ],
+      providesTags: ['Comment'],
     }),
     addComment: builder.mutation<Comment, AddCommentRequest>({
       query: (body) => ({
@@ -27,9 +26,7 @@ export const commentApiSlice = apiSlice.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: (result, error, arg) => [
-        { type: 'Comment', id: arg.postId },
-      ],
+      invalidatesTags: ['Comment'],
     }),
   }),
 });

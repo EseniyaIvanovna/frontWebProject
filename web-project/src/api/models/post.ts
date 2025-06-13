@@ -1,6 +1,6 @@
 export type Post = {
   id: number;
   userId: number;
-  content: string;
+  text: string;
   createdAt: Date;
 };

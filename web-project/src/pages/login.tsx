@@ -36,7 +36,7 @@ const AuthPage = () => {
     onSubmit: async (values, { setSubmitting, setFieldError }) => {
       try {
         await login(values).unwrap();
-        navigate('/');
+        navigate('/profile');
       } catch (error) {
         setFieldError('password', 'Неверный email или пароль');
         setFieldError('email', 'Неверный email или пароль');

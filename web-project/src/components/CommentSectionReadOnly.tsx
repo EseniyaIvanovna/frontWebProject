@@ -15,61 +15,20 @@ import { Send } from '@mui/icons-material';
 import { useGetUserByIdQuery } from '../api/userApiSlice';
 import { useGetCommentsByPostQuery } from '../api/commentApiSlice';
 
-interface CommentSectionProps {
+interface ProfileCommentSectionProps {
   postId: number;
-  currentUser: {
-    id: number;
-    name: string;
-    lastName: string;
-    photoAttachmentUrl: string | null;
-  };
-  onAddComment: (content: string) => void;
 }
 
-export const CommentSection = ({
+export const ProfileCommentSection = ({
   postId,
-  currentUser,
-  onAddComment,
-}: CommentSectionProps) => {
+}: ProfileCommentSectionProps) => {
   const [newComment, setNewComment] = useState('');
   const { data: comments = [], isLoading } = useGetCommentsByPostQuery({
     postId,
   });
 
-  const handleSubmit = () => {
-    if (newComment.trim()) {
-      onAddComment(newComment);
-      setNewComment('');
-    }
-  };
-
   return (
     <Paper sx={{ mt: 2, p: 2 }}>
-      {/* Поле ввода нового комментария */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Avatar src={currentUser?.photoAttachmentUrl || undefined}>
-          {!currentUser.photoAttachmentUrl &&
-            `${currentUser.name.charAt(0)}${currentUser.lastName.charAt(0)}`}
-        </Avatar>
-        <TextField
-          fullWidth
-          variant='outlined'
-          size='small'
-          placeholder='Написать комментарий...'
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-        />
-        <IconButton
-          color='primary'
-          onClick={handleSubmit}
-          disabled={!newComment.trim()}
-          sx={{ ml: 1 }}
-        >
-          <Send />
-        </IconButton>
-      </Box>
-
       {/* Список комментариев */}
       {isLoading ? (
         <Box>
@@ -92,11 +51,7 @@ export const CommentSection = ({
         <>
           <Divider sx={{ my: 2 }} />
           {comments.map((comment) => (
-            <CommentWithAuthor
-              key={comment.id}
-              comment={comment}
-              currentUser={currentUser}
-            />
+            <Comment key={comment.id} comment={comment} />
           ))}
         </>
       ) : (
@@ -108,13 +63,7 @@ export const CommentSection = ({
   );
 };
 
-const CommentWithAuthor = ({
-  comment,
-  currentUser,
-}: {
-  comment: any;
-  currentUser: any;
-}) => {
+const Comment = ({ comment }: { comment: any }) => {
   const { data: author, isLoading } = useGetUserByIdQuery({
     id: comment.userId,
   });
@@ -135,9 +84,9 @@ const CommentWithAuthor = ({
 
   return (
     <Box sx={{ display: 'flex', mb: 2 }}>
-      <Avatar sx={{ mr: 2 }}>
-        {author.name.charAt(0)}
-        {author.lastName.charAt(0)}
+      <Avatar src={author?.photoAttachmentUrl || undefined}>
+        {!author?.photoAttachmentUrl &&
+          `${author?.name.charAt(0)}${author?.lastName.charAt(0)}`}
       </Avatar>
       <Box>
         <Typography fontWeight='500'>

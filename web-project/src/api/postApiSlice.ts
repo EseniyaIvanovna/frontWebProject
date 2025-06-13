@@ -12,7 +12,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
     // Получение постов пользователя по ID
     getPostsByUser: builder.query<Post[], GetPostsByUserRequest>({
       query: ({ id }) => ({
-        url: `/Post/byUser/${id}`,
+        url: `/Post/byUser${id}`,
         method: 'GET',
       }),
       providesTags: ['Post'],
@@ -35,6 +35,15 @@ export const postApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ['Post'],
     }),
 
+    updatePost: builder.mutation<Post, { id: number; text: string }>({
+      query: ({ id, text }) => ({
+        url: `/Post`,
+        method: 'PUT',
+        body: { id, text },
+      }),
+      invalidatesTags: ['Post'],
+    }),
+
     deletePost: builder.mutation<void, number>({
       query: (id) => ({
         url: `/Post/${id}`,
@@ -49,5 +58,6 @@ export const {
   useGetPostsByUserQuery,
   useGetAllPostsQuery,
   useCreatePostMutation,
+  useUpdatePostMutation,
   useDeletePostMutation,
 } = postApiSlice;

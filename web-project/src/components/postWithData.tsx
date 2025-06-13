@@ -27,34 +27,32 @@ interface PostWithDataProps {
   post: {
     id: number;
     userId: number;
-    content: string;
+    text: string;
     createdAt: Date;
   };
   currentUser: {
     id: number;
     name: string;
     lastName: string;
+    photoAttachmentUrl: string | null;
   };
 }
 
 export const PostWithData = ({ post, currentUser }: PostWithDataProps) => {
   const [showComments, setShowComments] = useState(false);
 
-  // Загружаем данные автора поста
   const { data: author, isLoading: isAuthorLoading } = useGetUserByIdQuery({
     id: post.userId,
   });
 
-  // Загружаем реакции
   const { data: reactions = [], isLoading: isReactionsLoading } =
     useGetReactionsByPostQuery({ postId: post.id });
 
-  // Загружаем комментарии
   const {
     data: comments = [],
     isLoading: isCommentsLoading,
     refetch: refetchComments,
-  } = useGetCommentsByPostQuery({ postId: post.id }, { skip: !showComments });
+  } = useGetCommentsByPostQuery({ postId: post.id });
 
   const [addComment] = useAddCommentMutation();
   const [addReaction] = useAddReactionMutation();
@@ -72,7 +70,11 @@ export const PostWithData = ({ post, currentUser }: PostWithDataProps) => {
 
   // Обработчик добавления комментария
   const handleAddComment = async (content: string) => {
-    await addComment({ postId: post.id, content }).unwrap();
+    await addComment({
+      postId: post.id,
+      userId: currentUser.id,
+      content,
+    }).unwrap();
     refetchComments();
   };
 
@@ -90,9 +92,9 @@ export const PostWithData = ({ post, currentUser }: PostWithDataProps) => {
     <Paper sx={{ mb: 3, p: 3, borderRadius: 2 }}>
       {/* Шапка поста */}
       <Box sx={{ display: 'flex', mb: 2 }}>
-        <Avatar sx={{ mr: 2 }}>
-          {author.name.charAt(0)}
-          {author.lastName.charAt(0)}
+        <Avatar sx={{ mr: 2 }} src={author.photoAttachmentUrl || undefined}>
+          {!author.photoAttachmentUrl &&
+            `${author.name.charAt(0)}${author.lastName.charAt(0)}`}
         </Avatar>
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           <MuiLink
@@ -107,16 +109,19 @@ export const PostWithData = ({ post, currentUser }: PostWithDataProps) => {
           >
             {author.name} {author.lastName}
           </MuiLink>
+
           <Typography variant='caption' color='text.secondary' sx={{ mt: 0.5 }}>
             {post.createdAt.toLocaleString()}
           </Typography>
         </Box>
       </Box>
 
-      {/* Текст поста */}
-      <Typography sx={{ mb: 2, whiteSpace: 'pre-line' }}>
-        {post.content}
-      </Typography>
+      <Box>
+        {/* Текст поста */}
+        <Typography sx={{ mb: 2, whiteSpace: 'pre-line' }}>
+          {post.text || 'Нет содержимого'}
+        </Typography>
+      </Box>
 
       {/* Кнопки действий */}
       <Box sx={{ display: 'flex', gap: 1 }}>

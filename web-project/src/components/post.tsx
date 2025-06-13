@@ -47,6 +47,7 @@ export const Post = ({
     try {
       await addComment({
         postId: post.id,
+        userId: currentUser.id,
         content,
       }).unwrap();
       refetchComments();
@@ -83,7 +84,7 @@ export const Post = ({
       </Box>
 
       {/* Текст поста */}
-      <Typography paragraph sx={{ mb: 2, whiteSpace: 'pre-line' }}>
+      <Typography sx={{ mb: 2, whiteSpace: 'pre-line' }}>
         {post.content}
       </Typography>
 

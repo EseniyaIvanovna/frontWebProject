@@ -11,18 +11,23 @@ export type UserInfoResponse = {
   name: string;
   lastName: string;
   email: string;
+  password: string;
   dateOfBirth: Date;
   info: string;
   photoAttachmentUrl: string | null;
+  photoAttachmentId: number | null;
 };
 
 export type UpdateUserRequest = {
+  id: number;
+  email: string;
   name: string;
   lastName: string;
   dateOfBirth: string;
   info: string;
   password?: string;
   photoAttachmentUrl?: string | null;
+  photoAttachmentId?: number | null;
 };
 
 export const userApiSlice = apiSlice.injectEndpoints({
