@@ -36,7 +36,8 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "format": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "build-production": "env-cmd -f .env.production react-scripts build"
   },
   "eslintConfig": {
     "extends": [
