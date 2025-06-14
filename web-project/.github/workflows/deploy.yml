@@ -63,7 +63,7 @@ jobs:
           fi
 
       - name: Log in to GHCR (with sudo)
-        run: echo "${{ secrets.GHCR_PAT }}" | sudo docker login ghcr.io -u -u eseniyaivanovna --password-stdin
+        run: echo "${{ secrets.GHCR_PAT }}" | sudo docker login ghcr.io -u eseniyaivanovna --password-stdin
 
       - name: Pull and deploy frontend (with sudo)
         run: |
