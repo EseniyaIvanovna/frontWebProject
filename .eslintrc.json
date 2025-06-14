@@ -23,14 +23,9 @@
     "prettier/prettier": "error",
     "react/prop-types": "off",
     "no-empty-pattern": "off",
-    "@typescript-eslint/no-empty-pattern": "off",
     "react/no-empty-pattern": "off",
     "no-console": "warn",
     "no-debugger": "warn",
-    "no-unused-vars": "off",
-    "@typescript-eslint/no-empty-object-type": [
-      "error",
-      { "allowEmptyInterfaces": true }
-    ]
+    "no-unused-vars": "off"
   }
 }
